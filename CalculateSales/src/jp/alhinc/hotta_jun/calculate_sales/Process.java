@@ -213,7 +213,7 @@ public class Process {
 				}catch(NumberFormatException e){
 					judge = false;
 				}
-				if(arrLength == 3 && judge){				//一行目が三桁の数値かどうか
+				if(arrLength == 3 && judge == false){				//一行目が三桁の数値かどうか
 					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
 					return;
 				}
@@ -228,7 +228,7 @@ public class Process {
 					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
 					return;
 				}
-				if(second.matches("[0-9a-zA-Z]{8}")){
+				if(second.matches("[0-9a-zA-Z]{8}") == false){
 					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
 					return;
 					
