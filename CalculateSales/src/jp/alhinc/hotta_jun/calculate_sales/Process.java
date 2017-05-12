@@ -12,8 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Process {		
 	public static void main(String[] args){
@@ -32,6 +30,9 @@ public class Process {
 		}else{
 			cmdLine = args[0]+File.separator;
 		}
+		
+		//改行のための変数
+		String crlf = System.getProperty("line.separator");
 		
 		//支店定義<店舗コード, 店舗名>
 		HashMap<String, String> shop = new HashMap<String, String>();
@@ -109,10 +110,7 @@ public class Process {
 				while((s = commodityBr.readLine()) != null){
 					String[] arr;
 					arr = s.split(",");	
-					int arrLeng = arr[0].length();
-					Pattern p = Pattern.compile("^[0-9a-zA-Z]*$");
-					Matcher m = p.matcher(arr[0]);
-					if(arrLeng == 8 && m.find() == true){				//商品コードがアルファベットと数字の八桁
+					if(arr[0].matches("[0-9a-zA-Z]{8}")){				//商品コードがアルファベットと数字の八桁
 						if(arr.length == 2){							//商品名がカンマ、改行を含まない
 							item.put(arr[0], arr[1]);
 							itemSum.put(arr[0],0L);
@@ -203,24 +201,51 @@ public class Process {
 				
 				//一行目(支店コード)を読み込む
 				String first = br.readLine();
-				if(shop.get(first) == null){
+				if(first == null){
+					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
+					return;
+				}
+				int arrLength = first.length();
+				boolean judge;
+				try{
+					Integer.parseInt(first);
+					judge = true;
+				}catch(NumberFormatException e){
+					judge = false;
+				}
+				if(arrLength == 3 && judge){				//一行目が三桁の数値かどうか
+					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
+					return;
+				}
+				if(shop.containsKey(first) == false){		//一行目が支店定義ファイルで宣言されたコードか
 					System.out.println(renbanList.get(i)+"の支店コードが不正です");
 					return;
 				}
 				
 				//二行目(商品コード)を読み込む
 				String second = br.readLine();
-				if(item.get(second) == null){
+				if(second == null){
+					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
+					return;
+				}
+				if(second.matches("[0-9a-zA-Z]{8}")){
+					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
+					return;
+					
+				}
+				if(item.containsKey(second) == false){
 					System.out.println(renbanList.get(i)+"の商品コードが不正です");
 					return;
 				}
 				
 				//三行目(売上金額)を読み込む
 				String third = br.readLine();
-				Pattern p = Pattern.compile("^[0-9]*$");
-				Matcher m = p.matcher(third);
-				if(m.find() == false){
-					System.out.println("予期せぬエラーが発生しました");
+				if(third == null){
+					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
+					return;
+				}
+				if(third.matches("^[0-9]*$") == false){
+					System.out.println("予期せぬエラーが発生しました");		
 					return;
 				}
 				//三行目の数字の文字列をLong型の数値に変換
@@ -244,7 +269,7 @@ public class Process {
 					long sumsrc2 = itemSum.get(second);
 					long bItemSum = sumsrc2 + thirdNum;
 					int valLen2 = String.valueOf( bItemSum ).length();
-					if(valLen2 < 10){
+					if(valLen2 < 11){
 						itemSum.put(second,bItemSum);
 					}else{
 						System.out.println("合計金額が10桁を超えました");
@@ -257,7 +282,7 @@ public class Process {
 										
 				br.close();
 			}catch(IOException e){
-				System.out.println(e);
+				System.out.println("予期せぬエラーが発生しました");
 			}finally{
 				try{
 					if(br != null){
@@ -297,7 +322,7 @@ public class Process {
 			FileWriter fw = new FileWriter(file);
 			outBra = new BufferedWriter(fw);
 			for(Entry<String,Long> s : shopEntries){
-				outBra.write(s.getKey()+","+shop.get(s.getKey())+","+s.getValue()+"\r\n");
+				outBra.write(s.getKey()+","+shop.get(s.getKey())+","+s.getValue()+crlf);
 			}
 		}catch(IOException e){
 			System.out.println("予期せぬエラーが発生しました");
@@ -317,7 +342,7 @@ public class Process {
 			FileWriter fw = new FileWriter(file);
 			outCom = new BufferedWriter(fw);
 			for(Entry<String,Long> s : itemEntries){
-				outCom.write(s.getKey()+","+item.get(s.getKey())+","+s.getValue()+"\r\n");		
+				outCom.write(s.getKey()+","+item.get(s.getKey())+","+s.getValue()+crlf);		
 			}
 		}catch(IOException e){
 			System.out.println("予期せぬエラーが発生しました");
