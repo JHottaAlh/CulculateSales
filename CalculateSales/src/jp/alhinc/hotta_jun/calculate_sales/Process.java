@@ -20,11 +20,7 @@ public class Process {
 		
 		
 		//コマンドライン引数が存在するかのチェック
-		if(args.length == 0){
-			System.out.println("予期せぬエラーが発生しました");
-			return;
-		}
-		if(args.length > 1){
+		if(args.length != 1){
 			System.out.println("予期せぬエラーが発生しました");
 			return;
 		}
@@ -93,7 +89,9 @@ public class Process {
 			return;
 		}finally{
 			try{
-				branchBr.close();
+				if(branchBr != null){
+					branchBr.close();
+				}		
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 				return;
@@ -138,7 +136,9 @@ public class Process {
 			return;
 		}finally{
 			try{
-				commodityBr.close();
+				if(commodityBr != null){
+					commodityBr.close();
+				}	
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 				return;
@@ -191,6 +191,7 @@ public class Process {
 		//集計
 		int renNum = renbanList.size();			
 		for(int i = 0; i < renNum; i++){
+			BufferedReader br = null;
 			try{
 				File file = new File(cmdLine+renbanList.get(i));		//売上ファイルを読み込む
 				if(file.isFile() == false){
@@ -198,24 +199,30 @@ public class Process {
 					return;
 				}
 				FileReader fr = new FileReader(file);
-				BufferedReader br = new BufferedReader(fr);
+				br = new BufferedReader(fr);
 				
 				//一行目(支店コード)を読み込む
 				String first = br.readLine();
 				if(shop.get(first) == null){
-					System.out.println("<"+renbanList.get(i)+">の支店コードが不正です");
+					System.out.println(renbanList.get(i)+"の支店コードが不正です");
 					return;
 				}
 				
 				//二行目(商品コード)を読み込む
 				String second = br.readLine();
 				if(item.get(second) == null){
-					System.out.println("<"+renbanList.get(i)+">の商品コードが不正です");
+					System.out.println(renbanList.get(i)+"の商品コードが不正です");
 					return;
 				}
 				
 				//三行目(売上金額)を読み込む
 				String third = br.readLine();
+				Pattern p = Pattern.compile("^[0-9]*$");
+				Matcher m = p.matcher(third);
+				if(m.find() == false){
+					System.out.println("予期せぬエラーが発生しました");
+					return;
+				}
 				//三行目の数字の文字列をLong型の数値に変換
 				Long thirdNum = new Long(third);	
 				
@@ -226,7 +233,7 @@ public class Process {
 					long sumsrc1 = shopSum.get(first);
 					long bShopSum = sumsrc1 + thirdNum;
 					int valLen1 = String.valueOf( bShopSum ).length();
-					if(valLen1 < 10){
+					if(valLen1 < 11){
 						shopSum.put(first, bShopSum);
 					}else{
 						System.out.println("合計金額が10桁を超えました");
@@ -244,13 +251,22 @@ public class Process {
 						return;
 					}
 				}else{
-					System.out.println("<"+renbanList.get(i)+">のフォーマットが不正です");
+					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
 					return;
 				}
 										
 				br.close();
 			}catch(IOException e){
 				System.out.println(e);
+			}finally{
+				try{
+					if(br != null){
+						br.close();
+					}	
+				}catch(IOException e){
+					System.out.println("予期せぬエラーが発生しました");
+					return;
+				}
 			}				
 		}	
 		
@@ -308,7 +324,9 @@ public class Process {
 			return;
 		}finally{
 			try{
-				outCom.close();
+				if(outCom != null){
+					outCom.close();
+				}
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 				return;
