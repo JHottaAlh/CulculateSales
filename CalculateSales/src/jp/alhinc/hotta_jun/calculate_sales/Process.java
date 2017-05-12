@@ -17,9 +17,29 @@ import java.util.regex.Pattern;
 
 public class Process {		
 	public static void main(String[] args){
-		//支店定義　例）001,北海道支店
+		
+		
+		//コマンドライン引数が存在するかのチェック
+		if(args.length == 0){
+			System.out.println("予期せぬエラーが発生しました");
+			return;
+		}
+		if(args.length > 1){
+			System.out.println("予期せぬエラーが発生しました");
+			return;
+		}
+		
+		//コマンドライン引数の末尾にセパレータがあるかどうか		
+		String cmdLine;
+		if(args[0].matches("File.separator$")){
+			cmdLine = args[0];
+		}else{
+			cmdLine = args[0]+File.separator;
+		}
+		
+		//支店定義<店舗コード, 店舗名>
 		HashMap<String, String> shop = new HashMap<String, String>();
-		//商品定義　例）SFT00001,Wandows
+		//商品定義<商品コード, 商品名>
 		HashMap<String, String> item = new HashMap<String, String>();
 		
 		ArrayList<String> fileList = new ArrayList<String>();				//ディレクトリ内のファイルをすべて読み込む		
@@ -31,7 +51,7 @@ public class Process {
 		HashMap<String, Long> itemSum = new HashMap<String,Long>();		//商品コード,　合計金額
 				
 		//支店定義ファイルを読み込む
-		File branch = new File("args{0}"+File.separator+"branch.lst");
+		File branch = new File(cmdLine+"branch.lst");
 		BufferedReader branchBr = null;
 		try{
 			if(branch.exists() == true){
@@ -81,7 +101,7 @@ public class Process {
 		}
 		
 		//商品定義ファイルを読み込む
-		File commodity = new File("args{0}"+File.separator+"commodity.lst");
+		File commodity = new File(cmdLine+"commodity.lst");
 		BufferedReader commodityBr = null;
 		try{
 			if(commodity.exists() == true){
@@ -126,7 +146,7 @@ public class Process {
 		}
 		
 		//売り上げファイルの読み込み
-		String filePath = "args{0}";
+		String filePath = cmdLine;
 		File dir = new File(filePath);
 		String[] files = dir.list();
 		for(int i = 0; i < files.length; i++){					//ファイル名をString型で取得、ArrayList fileListに保管
@@ -172,7 +192,11 @@ public class Process {
 		int renNum = renbanList.size();			
 		for(int i = 0; i < renNum; i++){
 			try{
-				File file = new File("args{0}"+File.separator+renbanList.get(i));		//売上ファイルを読み込む
+				File file = new File(cmdLine+renbanList.get(i));		//売上ファイルを読み込む
+				if(file.isFile() == false){
+					System.out.println("売上ファイル名が連番になっていません");
+					return;
+				}
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
 				
@@ -253,7 +277,7 @@ public class Process {
 		//支店別集計ファイル　出力	
 		BufferedWriter outBra = null;
 		try{
-			File file = new File("args{0}"+File.separator+"branch.out");
+			File file = new File(cmdLine+"branch.out");
 			FileWriter fw = new FileWriter(file);
 			outBra = new BufferedWriter(fw);
 			for(Entry<String,Long> s : shopEntries){
@@ -273,7 +297,7 @@ public class Process {
 		//商品別集計ファイル　出力
 		BufferedWriter outCom = null;
 		try{
-			File file = new File("args{0}"+File.separator+"commodity.out");
+			File file = new File(cmdLine+"commodity.out");
 			FileWriter fw = new FileWriter(file);
 			outCom = new BufferedWriter(fw);
 			for(Entry<String,Long> s : itemEntries){
