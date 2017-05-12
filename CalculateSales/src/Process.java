@@ -6,7 +6,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Process {		
 	public static void main(String[] args){
@@ -24,7 +30,7 @@ public class Process {
 		HashMap<String, Long> itemSum = new HashMap<String,Long>();		//商品コード,　合計金額
 				
 		//支店定義ファイルを読み込む
-		File branch = new File("C:\\java\\branch.txt");	//args{0}+File.separator+branch.lst
+		File branch = new File("args{0}"+File.separator+"branch.lst");
 		BufferedReader branchBr = null;
 		try{
 			if(branch.exists() == true){
@@ -48,9 +54,13 @@ public class Process {
 							shopSum.put(arr[0],0L);
 						}else{
 							System.out.println("支店定義ファイルのフォーマットが不正です");
+							branchBr.close();
+							return;
 						}
 					}else{
 						System.out.println("支店定義ファイルのフォーマットが不正です");
+						branchBr.close();
+						return;
 					}
 				}		
 			}else{
@@ -70,7 +80,7 @@ public class Process {
 		}
 		
 		//商品定義ファイルを読み込む
-		File commodity = new File("C:\\java\\commodity.txt");	//args{0}+File.separator+commodity.lst
+		File commodity = new File("args{0}"+File.separator+"commodity.lst");
 		BufferedReader commodityBr = null;
 		try{
 			if(commodity.exists() == true){
@@ -81,21 +91,21 @@ public class Process {
 					String[] arr;
 					arr = s.split(",");	
 					int arrLeng = arr[0].length();
-					boolean judge;
-					try{
-						/////////////////////////////////////////
-					}catch(NumberFormatException e){
-						judge = false;
-					}
-					if(arrLeng == 8){									//商品コードがアルファベットと数字の八桁
+					Pattern p = Pattern.compile("^[0-9a-zA-Z]*$");
+					Matcher m = p.matcher(arr[0]);
+					if(arrLeng == 8 && m.find() == true){				//商品コードがアルファベットと数字の八桁
 						if(arr.length == 2){							//商品名がカンマ、改行を含まない
 							item.put(arr[0], arr[1]);
 							itemSum.put(arr[0],0L);
 						}else{
 							System.out.println("商品定義ファイルのフォーマットが不正です");
+							commodityBr.close();
+							return;
 						}
 					}else{
 						System.out.println("商品定義ファイルのフォーマットが不正です");
+						commodityBr.close();
+						return;
 					}
 				}		
 			}else{
@@ -115,27 +125,23 @@ public class Process {
 		}
 		
 		//売り上げファイルの読み込み
-		String filePath = "C:\\java\\";	//args{0}
+		String filePath = "args{0}";
 		File dir = new File(filePath);
 		String[] files = dir.list();
-		//ディレクトリ内のファイル名をString型で取得、ArrayList fileListに保管
-		for(int i = 0; i < files.length; i++){
+		for(int i = 0; i < files.length; i++){					//ファイル名をString型で取得、ArrayList fileListに保管
 			fileList.add(files[i]);
 		}
-		//ArrayList fileList内のString型の変数の内、.rcdを含む文字列だけをArrayList rcdListに保管
-		int size = fileList.size();
+		int size = fileList.size();							//.rcdを含む文字列だけをArrayList rcdListに保管
 		String[] fileName = new String[size];
 		for(int i = 0; i < size; i++){
-			//例）fileName[0]にfileList(0)の文字列を代入
 			fileName[i] = fileList.get(i);
-			//fileName[0]に.rcdが含まれるならfileName[0]をrcdListに加える
-			if(fileName[i].contains(".rcd")){
+			if(fileName[i].contains(".rcd")){					//.rcdが含まれるならrcdListに加える
 				rcdList.add(fileName[i]);				
 			}		
 		}
 		int rcdNum = rcdList.size();		
 		
-		//rcdListリストを読み込み、ファイル名と拡張子を区切り、数値に変換して新しいリストに格納
+		//rcdListリストのファイル名を数値に変換して数値のものは新しいリスト拡張子つきで格納
 		for(int i = 0; i < rcdNum; i++){
 			String splitRcd = rcdList.get(i);
 			String[] arr;
@@ -157,72 +163,131 @@ public class Process {
 				j++;
 			}else{
 				System.out.println("売上ファイル名が連番になっていません");
-				break;
+				return;
 			}	
 		}
 	
 		//集計
 		int renNum = renbanList.size();			
-		//売上ファイルを読み込む
 		for(int i = 0; i < renNum; i++){
 			try{
-				File file = new File("C:\\java\\"+renbanList.get(i));		//args{0}+File.separator + renbanList.get(i)
+				File file = new File("args{0}"+File.separator+renbanList.get(i));		//売上ファイルを読み込む
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
+				
 				//一行目(支店コード)を読み込む
 				String first = br.readLine();
+				if(shop.get(first) == null){
+					System.out.println("<"+renbanList.get(i)+">の支店コードが不正です");
+					return;
+				}
+				
 				//二行目(商品コード)を読み込む
 				String second = br.readLine();
+				if(item.get(second) == null){
+					System.out.println("<"+renbanList.get(i)+">の商品コードが不正です");
+					return;
+				}
+				
 				//三行目(売上金額)を読み込む
 				String third = br.readLine();
 				//三行目の数字の文字列をLong型の数値に変換
 				Long thirdNum = new Long(third);	
 				
-				//shopSum
-				long sumsrc1 = shopSum.get(first);
-				long bShopSum = sumsrc1 + thirdNum;	
-				shopSum.put(first, bShopSum);
+				//四行目があればエラー表示し、プログラムを終了する。
+				String fourth = br.readLine();
+				if(fourth == null){				
+					//shopSum
+					long sumsrc1 = shopSum.get(first);
+					long bShopSum = sumsrc1 + thirdNum;
+					int valLen1 = String.valueOf( bShopSum ).length();
+					if(valLen1 < 10){
+						shopSum.put(first, bShopSum);
+					}else{
+						System.out.println("合計金額が10桁を超えました");
+						return;
+					}
 				
-				//itemSum
-				long sumsrc2 = itemSum.get(second);
-				long bItemSum = sumsrc2 + thirdNum;
-				itemSum.put(second,bItemSum);
+					//itemSum
+					long sumsrc2 = itemSum.get(second);
+					long bItemSum = sumsrc2 + thirdNum;
+					int valLen2 = String.valueOf( bItemSum ).length();
+					if(valLen2 < 10){
+						itemSum.put(second,bItemSum);
+					}else{
+						System.out.println("合計金額が10桁を超えました");
+						return;
+					}
+				}else{
+					System.out.println("<"+renbanList.get(i)+">のフォーマットが不正です");
+					return;
+				}
 										
 				br.close();
 			}catch(IOException e){
 				System.out.println(e);
 			}				
 		}	
-		//支店別集計ファイル　出力
-		int shopNum = shop.size();
-		int itemNum = item.size();		
+		
+		//店舗売上金額の合計のマップをリストに格納
+        List<Map.Entry<String,Long>> shopEntries = 
+              new ArrayList<Map.Entry<String,Long>>(shopSum.entrySet());
+        Collections.sort(shopEntries, new Comparator<Map.Entry<String,Long>>() { 
+            @Override
+            public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
+                return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
+            }
+        });
+        
+      //商品売上金額の合計のマップをリストに格納
+        List<Map.Entry<String,Long>> itemEntries = 
+              new ArrayList<Map.Entry<String,Long>>(itemSum.entrySet());
+        Collections.sort(itemEntries, new Comparator<Map.Entry<String,Long>>() { 
+            @Override
+            public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
+                return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
+            }
+        });
+		
+		//支店別集計ファイル　出力	
+		BufferedWriter outBra = null;
 		try{
-			File file = new File("C:\\java\\branchResult.txt"); //args{0}+File.separator+branch.out
+			File file = new File("args{0}"+File.separator+"branch.out");
 			FileWriter fw = new FileWriter(file);
-			BufferedWriter bw = new BufferedWriter(fw);
-			for(int i = 1; i <= shopNum; i++){
-				String format = String.format("%03d",i);
-				//long shopSumResult = shopSum.get(format);
-				bw.write(format+","+shop.get(format)+","+shopSum.get(format)+"\r\n");
+			outBra = new BufferedWriter(fw);
+			for(Entry<String,Long> s : shopEntries){
+				outBra.write(s.getKey()+","+shop.get(s.getKey())+","+s.getValue()+"\r\n");
 			}
-			bw.close();
 		}catch(IOException e){
-			System.out.println(e);
-		}	
-		//商品別集計ファイル　出力			
-		try{
-			File file = new File("C:\\java\\commodityResult.txt"); //args{0}+File.separator+commodity.out
-			FileWriter fw = new FileWriter(file);
-			BufferedWriter bw = new BufferedWriter(fw);
-			for(int i = 1; i <= itemNum; i++){
-				String format = String.format("SFT%05d",i);
-				bw.write(format+","+item.get(format)+","+itemSum.get(format)+"\r\n");		
-			}
-			bw.close();
-		}catch(IOException e){
-			System.out.println(e);
+			System.out.println("予期せぬエラーが発生しました");
+			return;
 		}finally{
-			//
+			try{
+				outBra.close();
+			}catch(IOException e){
+				System.out.println("予期せぬエラーが発生しました");
+				return;
+			}
+		}	
+		//商品別集計ファイル　出力
+		BufferedWriter outCom = null;
+		try{
+			File file = new File("args{0}"+File.separator+"commodity.out");
+			FileWriter fw = new FileWriter(file);
+			outCom = new BufferedWriter(fw);
+			for(Entry<String,Long> s : itemEntries){
+				outCom.write(s.getKey()+","+item.get(s.getKey())+","+s.getValue()+"\r\n");		
+			}
+		}catch(IOException e){
+			System.out.println("予期せぬエラーが発生しました");
+			return;
+		}finally{
+			try{
+				outCom.close();
+			}catch(IOException e){
+				System.out.println("予期せぬエラーが発生しました");
+				return;
+			}
 		}
 	}
 }
