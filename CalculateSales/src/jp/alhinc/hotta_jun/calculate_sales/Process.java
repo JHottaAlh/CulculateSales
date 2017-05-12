@@ -23,13 +23,8 @@ public class Process {
 			return;
 		}
 		
-		//コマンドライン引数の末尾にセパレータがあるかどうか		
-		String cmdLine;
-		if(args[0].matches("File.separator$")){
-			cmdLine = args[0];
-		}else{
-			cmdLine = args[0]+File.separator;
-		}
+		//コマンドライン引数を変数に代入		
+		String cmdLine = args[0];
 		
 		//改行のための変数
 		String crlf = System.getProperty("line.separator");
@@ -48,7 +43,7 @@ public class Process {
 		HashMap<String, Long> itemSum = new HashMap<String,Long>();		//商品コード,　合計金額
 				
 		//支店定義ファイルを読み込む
-		File branch = new File(cmdLine+"branch.lst");
+		File branch = new File(cmdLine+File.separator+"branch.lst");
 		BufferedReader branchBr = null;
 		try{
 			if(branch.exists() == true){
@@ -100,7 +95,7 @@ public class Process {
 		}
 		
 		//商品定義ファイルを読み込む
-		File commodity = new File(cmdLine+"commodity.lst");
+		File commodity = new File(cmdLine+File.separator+"commodity.lst");
 		BufferedReader commodityBr = null;
 		try{
 			if(commodity.exists() == true){
@@ -191,7 +186,7 @@ public class Process {
 		for(int i = 0; i < renNum; i++){
 			BufferedReader br = null;
 			try{
-				File file = new File(cmdLine+renbanList.get(i));		//売上ファイルを読み込む
+				File file = new File(cmdLine+File.separator+renbanList.get(i));		//売上ファイルを読み込む
 				if(file.isFile() == false){
 					System.out.println("売上ファイル名が連番になっていません");
 					return;
@@ -205,18 +200,6 @@ public class Process {
 					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
 					return;
 				}
-				int arrLength = first.length();
-				boolean judge;
-				try{
-					Integer.parseInt(first);
-					judge = true;
-				}catch(NumberFormatException e){
-					judge = false;
-				}
-				if(arrLength == 3 && judge == false){				//一行目が三桁の数値かどうか
-					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
-					return;
-				}
 				if(shop.containsKey(first) == false){		//一行目が支店定義ファイルで宣言されたコードか
 					System.out.println(renbanList.get(i)+"の支店コードが不正です");
 					return;
@@ -227,11 +210,6 @@ public class Process {
 				if(second == null){
 					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
 					return;
-				}
-				if(second.matches("[0-9a-zA-Z]{8}") == false){
-					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
-					return;
-					
 				}
 				if(item.containsKey(second) == false){
 					System.out.println(renbanList.get(i)+"の商品コードが不正です");
@@ -249,38 +227,35 @@ public class Process {
 					return;
 				}
 				//三行目の数字の文字列をLong型の数値に変換
-				Long thirdNum = new Long(third);	
-				
+				Long thirdNum = new Long(third);						
+				//shopSum
+				long sumsrc1 = shopSum.get(first);
+				long bShopSum = sumsrc1 + thirdNum;
+				int valLen1 = String.valueOf( bShopSum ).length();
+				if(valLen1 < 11){
+					shopSum.put(first, bShopSum);
+				}else{
+					System.out.println("合計金額が10桁を超えました");
+					return;
+				}
+			
+				//itemSum
+				long sumsrc2 = itemSum.get(second);
+				long bItemSum = sumsrc2 + thirdNum;
+				int valLen2 = String.valueOf( bItemSum ).length();
+				if(valLen2 < 11){
+					itemSum.put(second,bItemSum);
+				}else{
+					System.out.println("合計金額が10桁を超えました");
+					return;
+				}
 				//四行目があればエラー表示し、プログラムを終了する。
 				String fourth = br.readLine();
-				if(fourth == null){				
-					//shopSum
-					long sumsrc1 = shopSum.get(first);
-					long bShopSum = sumsrc1 + thirdNum;
-					int valLen1 = String.valueOf( bShopSum ).length();
-					if(valLen1 < 11){
-						shopSum.put(first, bShopSum);
-					}else{
-						System.out.println("合計金額が10桁を超えました");
-						return;
-					}
-				
-					//itemSum
-					long sumsrc2 = itemSum.get(second);
-					long bItemSum = sumsrc2 + thirdNum;
-					int valLen2 = String.valueOf( bItemSum ).length();
-					if(valLen2 < 11){
-						itemSum.put(second,bItemSum);
-					}else{
-						System.out.println("合計金額が10桁を超えました");
-						return;
-					}
+				if(fourth == null){
 				}else{
 					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
 					return;
 				}
-										
-				br.close();
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 			}finally{
@@ -318,7 +293,7 @@ public class Process {
 		//支店別集計ファイル　出力	
 		BufferedWriter outBra = null;
 		try{
-			File file = new File(cmdLine+"branch.out");
+			File file = new File(cmdLine+File.separator+"branch.out");
 			FileWriter fw = new FileWriter(file);
 			outBra = new BufferedWriter(fw);
 			for(Entry<String,Long> s : shopEntries){
@@ -338,7 +313,7 @@ public class Process {
 		//商品別集計ファイル　出力
 		BufferedWriter outCom = null;
 		try{
-			File file = new File(cmdLine+"commodity.out");
+			File file = new File(cmdLine+File.separator+"commodity.out");
 			FileWriter fw = new FileWriter(file);
 			outCom = new BufferedWriter(fw);
 			for(Entry<String,Long> s : itemEntries){
