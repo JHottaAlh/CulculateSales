@@ -303,10 +303,12 @@ public class Process {
 			return;
 		}finally{
 			try{
-				outBra.close();
-			}catch(NullPointerException n){
-				System.out.println("予期せぬエラーが発生しました");
-				return;
+				if(outBra != null){
+					outBra.close();
+				}else{
+					System.out.println("予期せぬエラーが発生しました");
+					return;
+				}
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 				return;
@@ -315,7 +317,7 @@ public class Process {
 		//商品別集計ファイル　出力
 		BufferedWriter outCom = null;
 		try{
-			File file = new File(cmdLine+File.separator+"commodity.out");
+			File file = new File(cmdLine+File.separator+"commodityResult.txt");
 			FileWriter fw = new FileWriter(file);
 			outCom = new BufferedWriter(fw);
 			for(Entry<String,Long> s : itemEntries){
@@ -325,10 +327,12 @@ public class Process {
 			return;
 		}finally{
 			try{
-				outCom.close();
-			}catch(NullPointerException n){
-				System.out.println("予期せぬエラーが発生しました");
-				return;
+				if(outCom != null){
+					outCom.close();
+				}else{
+					System.out.println("予期せぬエラーが発生しました");
+					return;
+				}
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 				return;
