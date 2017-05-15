@@ -300,11 +300,13 @@ public class Process {
 				outBra.write(s.getKey()+","+shop.get(s.getKey())+","+s.getValue()+crlf);
 			}
 		}catch(IOException e){
-			System.out.println("予期せぬエラーが発生しました");
 			return;
 		}finally{
 			try{
 				outBra.close();
+			}catch(NullPointerException n){
+				System.out.println("予期せぬエラーが発生しました");
+				return;
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 				return;
@@ -320,13 +322,13 @@ public class Process {
 				outCom.write(s.getKey()+","+item.get(s.getKey())+","+s.getValue()+crlf);		
 			}
 		}catch(IOException e){
-			System.out.println("予期せぬエラーが発生しました");
 			return;
 		}finally{
 			try{
-				if(outCom != null){
-					outCom.close();
-				}
+				outCom.close();
+			}catch(NullPointerException n){
+				System.out.println("予期せぬエラーが発生しました");
+				return;
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 				return;
