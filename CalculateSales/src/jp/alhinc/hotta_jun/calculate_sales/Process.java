@@ -99,7 +99,7 @@ public class Process {
         return true;
 	}
 	
-	//メインメソッド
+	//--------------------------------メインメソッド--------------------------------//
 	public static void main(String[] args){
 		
 		
@@ -261,16 +261,16 @@ public class Process {
 		
 		//支店別集計ファイル　出力	
         String outBrPath = cmdLine+File.separator+"branch.out";
-        boolean kekkaBr = outBC(outBrPath, branch, branchSum);
-        if(kekkaBr == false){
+        boolean resultBr = outBC(outBrPath, branch, branchSum);
+        if(resultBr == false){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
         }
         
       //商品別集計ファイル　出力	
         String outComPath = cmdLine+File.separator+"commodity.out";
-        boolean kekkaCom = outBC(outComPath, commodity, commoditySum);
-        if(kekkaCom == false){
+        boolean resultCom = outBC(outComPath, commodity, commoditySum);
+        if(resultCom == false){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
         }
