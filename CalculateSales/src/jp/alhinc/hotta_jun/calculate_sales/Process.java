@@ -317,7 +317,7 @@ public class Process {
 		//商品別集計ファイル　出力
 		BufferedWriter outCom = null;
 		try{
-			File file = new File(cmdLine+File.separator+"commodityResult.txt");
+			File file = new File(cmdLine+File.separator+"commodity.out");
 			FileWriter fw = new FileWriter(file);
 			outCom = new BufferedWriter(fw);
 			for(Entry<String,Long> s : itemEntries){
