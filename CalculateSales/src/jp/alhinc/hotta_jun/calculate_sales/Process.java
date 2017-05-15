@@ -16,46 +16,94 @@ import java.util.Map.Entry;
 public class Process {	
 	
 	
-	//出力ファイルを作成するためのメソッド
-		/*
-		HashMap codeはコード、名前
-		HashMap sumはコード、合計金額
-		*/
-	static boolean outBC(String filePath, HashMap<String,String> code, HashMap<String,Long> sum){
-		//改行のための変数
-		String crlf = System.getProperty("line.separator");
-		//売上金額の合計のマップをリストに格納
-        List<Map.Entry<String,Long>> Entries = 
-              new ArrayList<Map.Entry<String,Long>>(sum.entrySet());
-        Collections.sort(Entries, new Comparator<Map.Entry<String,Long>>() { 
-            @Override
-            public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
-                return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
-            }
-        });
-        
-		BufferedWriter br = null;
+	//入力ファイルを読み込み、マップに格納するためのメソッド
+	//条件式(支店or商品, ファイルパス, 条件1 名前Map, 合計Map)
+	public static boolean inSI(String junle, String filePath, String condit, HashMap<String, String> putMap, HashMap<String, Long> putSum){
+		File file = new File(filePath);
+		BufferedReader br = null;
 		try{
-			File file = new File(filePath);
-			FileWriter fw = new FileWriter(file);
-			br = new BufferedWriter(fw);
-			for(Entry<String,Long> s : Entries){
-				br.write(s.getKey()+","+code.get(s.getKey())+","+s.getValue()+crlf);
+			if(file.exists() == true){
+				FileReader fl = new FileReader(file);
+				br = new BufferedReader(fl);
+				String s;	
+				while((s = br.readLine()) != null){
+					String[] arr;
+					arr = s.split(",");	
+					if(arr[0].matches(condit)){
+						if(arr.length == 2){							//商品名がカンマ、改行を含まない
+							putMap.put(arr[0], arr[1]);
+							putSum.put(arr[0],0L);
+						}else{
+							System.out.println(junle+"定義ファイルのフォーマットが不正です");
+							br.close();
+							return false;
+						}
+					}else{
+						System.out.println(junle+"定義ファイルのフォーマットが不正です");
+						br.close();
+						return false;
+					}
+				}		
+			}else{
+				System.out.println(junle+"定義ファイルが存在しません");
+				return false;
 			}
 		}catch(IOException e){
+			System.out.println("予期せぬエラーが発生しました");
 			return false;
 		}finally{
 			try{
 				if(br != null){
 					br.close();
-				}else{
-					return false;
-				}
+				}	
 			}catch(IOException e){
+				System.out.println("予期せぬエラーが発生しました");
 				return false;
 			}
 		}
 		return true;
+	}
+	
+	
+	//出力ファイルを作成するためのメソッド
+	/*
+	HashMap codeはコード、名前
+	HashMap sumはコード、合計金額
+	*/
+	static boolean outBC(String filePath, HashMap<String,String> code, HashMap<String,Long> sum){
+		//改行のための変数
+		String crlf = System.getProperty("line.separator");
+		//売上金額の合計のマップをリストに格納
+        List<Map.Entry<String,Long>> Entries = new ArrayList<Map.Entry<String,Long>>(sum.entrySet());
+        Collections.sort(Entries, new Comparator<Map.Entry<String,Long>>() { 
+        	@Override
+        	public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
+        		return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
+        	}
+        });
+        
+        BufferedWriter br = null;
+        try{
+        	File file = new File(filePath);
+        	FileWriter fw = new FileWriter(file);
+        	br = new BufferedWriter(fw);
+        	for(Entry<String,Long> s : Entries){
+        		br.write(s.getKey()+","+code.get(s.getKey())+","+s.getValue()+crlf);
+        	}
+        }catch(IOException e){
+        	return false;
+        }finally{
+        	try{
+        		if(br != null){
+        			br.close();
+        		}else{
+        			return false;
+        		}
+        	}catch(IOException e){
+        		return false;
+        	}
+        }
+        return true;
 	}
 	
 	//メインメソッド
@@ -85,99 +133,18 @@ public class Process {
 		HashMap<String, Long> itemSum = new HashMap<String,Long>();		//商品コード,　合計金額
 				
 		//支店定義ファイルを読み込む
-		File branch = new File(cmdLine+File.separator+"branch.lst");
-		BufferedReader branchBr = null;
-		try{
-			if(branch.exists() == true){
-				FileReader fl = new FileReader(branch);
-				branchBr = new BufferedReader(fl);
-				String s;	
-				while((s = branchBr.readLine()) != null){
-					String[] arr;
-					arr = s.split(",");	
-					int arrLength = arr[0].length();
-					boolean judge;
-					try{
-						Integer.parseInt(arr[0]);
-						judge = true;
-					}catch(NumberFormatException e){
-						judge = false;
-					}
-					if(arrLength == 3 && judge){							//支店コードが三桁かどうか、数値かどうか
-						if(arr.length == 2){								//支店名がカンマ、改行を含まない
-							shop.put(arr[0], arr[1]);
-							shopSum.put(arr[0],0L);
-						}else{
-							System.out.println("支店定義ファイルのフォーマットが不正です");
-							branchBr.close();
-							return;
-						}
-					}else{
-						System.out.println("支店定義ファイルのフォーマットが不正です");
-						branchBr.close();
-						return;
-					}
-				}		
-			}else{
-				System.out.println("支店定義ファイルが存在しません");
-				return;
-			}
-		}catch(IOException e){
-			System.out.println("予期せぬエラーが発生しました");
+		String brPath = cmdLine+File.separator+"branch.lst";
+		boolean inBrKekka = inSI("支店", brPath, "[0-9]{3}", shop, shopSum);
+		if(inBrKekka == false){
 			return;
-		}finally{
-			try{
-				if(branchBr != null){
-					branchBr.close();
-				}		
-			}catch(IOException e){
-				System.out.println("予期せぬエラーが発生しました");
-				return;
-			}
 		}
 		
+		
 		//商品定義ファイルを読み込む
-		File commodity = new File(cmdLine+File.separator+"commodity.lst");
-		BufferedReader commodityBr = null;
-		try{
-			if(commodity.exists() == true){
-				FileReader fl = new FileReader(commodity);
-				commodityBr = new BufferedReader(fl);
-				String s;	
-				while((s = commodityBr.readLine()) != null){
-					String[] arr;
-					arr = s.split(",");	
-					if(arr[0].matches("[0-9a-zA-Z]{8}")){				//商品コードがアルファベットと数字の八桁
-						if(arr.length == 2){							//商品名がカンマ、改行を含まない
-							item.put(arr[0], arr[1]);
-							itemSum.put(arr[0],0L);
-						}else{
-							System.out.println("商品定義ファイルのフォーマットが不正です");
-							commodityBr.close();
-							return;
-						}
-					}else{
-						System.out.println("商品定義ファイルのフォーマットが不正です");
-						commodityBr.close();
-						return;
-					}
-				}		
-			}else{
-				System.out.println("商品定義ファイルが存在しません");
-				return;
-			}
-		}catch(IOException e){
-			System.out.println("予期せぬエラーが発生しました");
+		String comPath = cmdLine+File.separator+"commodity.lst"; 
+		boolean inComKekka = inSI("商品", comPath, "[0-9a-zA-Z]{8}", item, itemSum);
+		if(inComKekka == false){
 			return;
-		}finally{
-			try{
-				if(commodityBr != null){
-					commodityBr.close();
-				}	
-			}catch(IOException e){
-				System.out.println("予期せぬエラーが発生しました");
-				return;
-			}
 		}
 		
 		//売り上げファイルの読み込み
