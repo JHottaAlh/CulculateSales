@@ -1,13 +1,64 @@
 package jp.alhinc.hotta_jun.calculate_sales;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
-public class Process {		
+public class Process {	
+	
+	
+	//出力ファイルを作成するためのメソッド
+		/*
+		HashMap codeはコード、名前
+		HashMap sumはコード、合計金額
+		*/
+	static boolean outBC(String filePath, HashMap<String,String> code, HashMap<String,Long> sum){
+		//改行のための変数
+		String crlf = System.getProperty("line.separator");
+		//売上金額の合計のマップをリストに格納
+        List<Map.Entry<String,Long>> Entries = 
+              new ArrayList<Map.Entry<String,Long>>(sum.entrySet());
+        Collections.sort(Entries, new Comparator<Map.Entry<String,Long>>() { 
+            @Override
+            public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
+                return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
+            }
+        });
+        
+		BufferedWriter br = null;
+		try{
+			File file = new File(filePath);
+			FileWriter fw = new FileWriter(file);
+			br = new BufferedWriter(fw);
+			for(Entry<String,Long> s : Entries){
+				br.write(s.getKey()+","+code.get(s.getKey())+","+s.getValue()+crlf);
+			}
+		}catch(IOException e){
+			return false;
+		}finally{
+			try{
+				if(br != null){
+					br.close();
+				}else{
+					return false;
+				}
+			}catch(IOException e){
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	//メインメソッド
 	public static void main(String[] args){
 		
 		
@@ -19,9 +70,6 @@ public class Process {
 		
 		//コマンドライン引数を変数に代入		
 		String cmdLine = args[0];
-		
-		//改行のための変数
-		String crlf = System.getProperty("line.separator");
 		
 		//支店定義<店舗コード, 店舗名>
 		HashMap<String, String> shop = new HashMap<String, String>();
@@ -268,7 +316,7 @@ public class Process {
 		
 		//支店別集計ファイル　出力	
         String outBrPath = cmdLine+File.separator+"branch.out";
-        boolean kekkaBr = MethodList.outBC(outBrPath, shop, shopSum);
+        boolean kekkaBr = outBC(outBrPath, shop, shopSum);
         if(kekkaBr == false){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
@@ -276,7 +324,7 @@ public class Process {
         
       //商品別集計ファイル　出力	
         String outComPath = cmdLine+File.separator+"commodity.out";
-        boolean kekkaCom = MethodList.outBC(outComPath, item, itemSum);
+        boolean kekkaCom = outBC(outComPath, item, itemSum);
         if(kekkaCom == false){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
