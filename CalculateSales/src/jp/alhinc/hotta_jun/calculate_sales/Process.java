@@ -113,57 +113,47 @@ public class Process {
 		String cmdLine = args[0];
 		
 		//支店定義<店舗コード, 店舗名>
-		HashMap<String, String> shop = new HashMap<String, String>();
+		HashMap<String, String> branch = new HashMap<String, String>();
 		//商品定義<商品コード, 商品名>
-		HashMap<String, String> item = new HashMap<String, String>();
+		HashMap<String, String> commodity = new HashMap<String, String>();
 		
-		ArrayList<String> fileList = new ArrayList<String>();				//ディレクトリ内のファイルをすべて読み込む		
-		ArrayList<String> rcdList = new ArrayList<String>();				//.rcdが含まれるものだけのリスト		
+		ArrayList<String> fileList = new ArrayList<String>();				//ディレクトリ内のファイルをすべて読み込む				
 		ArrayList<Integer> fileSort = new ArrayList<Integer>();			//.rcdを除いたファイル名を数値として取得
-		ArrayList<String> renbanList = new ArrayList<String>();		 	//連番だけに絞る
+		ArrayList<File> serialList = new ArrayList<File>();		 		//連番だけに絞る
 		
-		HashMap<String, Long> shopSum = new HashMap<String, Long>();		//店舗コード,　合計金額
-		HashMap<String, Long> itemSum = new HashMap<String,Long>();		//商品コード,　合計金額
+		HashMap<String, Long> branchSum = new HashMap<String, Long>();		//店舗コード,　合計金額
+		HashMap<String, Long> commoditySum = new HashMap<String,Long>();		//商品コード,　合計金額
 				
 		//支店定義ファイルを読み込む
 		String brPath = cmdLine+File.separator+"branch.lst";
-		boolean inBrKekka = inSI("支店", brPath, "[0-9]{3}", shop, shopSum);
-		if(inBrKekka == false){
+		boolean inBrResult = inSI("支店", brPath, "[0-9]{3}", branch, branchSum);
+		if(inBrResult == false){
 			return;
 		}
 		
 		
 		//商品定義ファイルを読み込む
 		String comPath = cmdLine+File.separator+"commodity.lst"; 
-		boolean inComKekka = inSI("商品", comPath, "[0-9a-zA-Z]{8}", item, itemSum);
-		if(inComKekka == false){
+		boolean inComResult = inSI("商品", comPath, "[0-9a-zA-Z]{8}", commodity, commoditySum);
+		if(inComResult == false){
 			return;
 		}
 		
 		//売り上げファイルの読み込み
-		String filePath = cmdLine;
-		File dir = new File(filePath);
+		File dir = new File(cmdLine);					//ファイル名をString型で取得、中でも.rcdのものだけリストに入れる
 		String[] files = dir.list();
-		for(int i = 0; i < files.length; i++){					//ファイル名をString型で取得、ArrayList fileListに保管
-			fileList.add(files[i]);
+		for(int i = 0; i < files.length; i++){					
+			if(files[i].contains(".rcd")){
+				fileList.add(files[i]);
+			}
 		}
-		int size = fileList.size();							//.rcdを含む文字列だけをArrayList rcdListに保管
-		String[] fileName = new String[size];
-		for(int i = 0; i < size; i++){
-			fileName[i] = fileList.get(i);
-			if(fileName[i].contains(".rcd")){					//.rcdが含まれるならrcdListに加える
-				rcdList.add(fileName[i]);				
-			}		
-		}
-		int rcdNum = rcdList.size();		
-		
 		//rcdListリストのファイル名を数値に変換して数値のものは新しいリスト拡張子つきで格納
+		int rcdNum = fileList.size();
 		for(int i = 0; i < rcdNum; i++){
-			String splitRcd = rcdList.get(i);
 			String[] arr;
-			arr = splitRcd.split("\\.");
-			int henkan = Integer.parseInt(arr[0]); 
-			fileSort.add(henkan);
+			arr = fileList.get(i).split("\\.");
+			int conversion = Integer.parseInt(arr[0]); 
+			fileSort.add(conversion);
 		}
 		Collections.sort(fileSort);
 		int fileSortNum = fileSort.size();
@@ -173,10 +163,11 @@ public class Process {
 		for(int i = 0; i < fileSortNum; i++){
 			int num = fileSort.get(i);
 			String rcdRen = String.format("%08d",num);
-			String renban = String.format("%08d",j);
-			if(rcdRen.equals(renban)){
-				renbanList.add(rcdRen+".rcd");
-				j++;
+			String serial = String.format("%08d",j);
+			File serialNumber = new File(cmdLine+File.separator+rcdRen+".rcd");
+			if(rcdRen.equals(serial) && serialNumber.isFile()){
+				serialList.add(serialNumber);
+				j++;		
 			}else{
 				System.out.println("売上ファイル名が連番になっていません");
 				return;
@@ -184,44 +175,44 @@ public class Process {
 		}
 	
 		//集計
-		int renNum = renbanList.size();			
+		int renNum = serialList.size();			
 		for(int i = 0; i < renNum; i++){
 			BufferedReader br = null;
 			try{
-				File file = new File(cmdLine+File.separator+renbanList.get(i));		//売上ファイルを読み込む
-				if(file.isFile() == false){
-					System.out.println("売上ファイル名が連番になっていません");
-					return;
-				}
-				FileReader fr = new FileReader(file);
+				FileReader fr = new FileReader(serialList.get(i));
 				br = new BufferedReader(fr);
 				
 				//一行目(支店コード)を読み込む
 				String first = br.readLine();
 				if(first == null){
-					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
+					System.out.println(serialList.get(i)+"のフォーマットが不正です");
 					return;
 				}
-				if(shop.containsKey(first) == false){		//一行目が支店定義ファイルで宣言されたコードか
-					System.out.println(renbanList.get(i)+"の支店コードが不正です");
-					return;
-				}
-				
 				//二行目(商品コード)を読み込む
 				String second = br.readLine();
 				if(second == null){
-					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
+					System.out.println(serialList.get(i)+"のフォーマットが不正です");
 					return;
 				}
-				if(item.containsKey(second) == false){
-					System.out.println(renbanList.get(i)+"の商品コードが不正です");
-					return;
-				}
-				
 				//三行目(売上金額)を読み込む
 				String third = br.readLine();
 				if(third == null){
-					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
+					System.out.println(serialList.get(i)+"のフォーマットが不正です");
+					return;
+				}
+				//四行目があればエラー表示し、プログラムを終了する。
+				String fourth = br.readLine();
+				if(fourth != null){
+					System.out.println(serialList.get(i)+"のフォーマットが不正です");
+					return;
+				}
+				//コードがマップに存在しなかった場合の処理
+				if(branch.containsKey(first) == false){		//一行目が支店定義ファイルで宣言されたコードか
+					System.out.println(serialList.get(i)+"の支店コードが不正です");
+					return;
+				}
+				if(commodity.containsKey(second) == false){
+					System.out.println(serialList.get(i)+"の商品コードが不正です");
 					return;
 				}
 				if(third.matches("^[0-9]*$") == false){
@@ -230,36 +221,30 @@ public class Process {
 				}
 				//三行目の数字の文字列をLong型の数値に変換
 				Long thirdNum = new Long(third);						
-				//shopSum
-				long sumsrc1 = shopSum.get(first);
+				//branchSum
+				long sumsrc1 = branchSum.get(first);
 				long bShopSum = sumsrc1 + thirdNum;
 				int valLen1 = String.valueOf( bShopSum ).length();
 				if(valLen1 < 11){
-					shopSum.put(first, bShopSum);
+					branchSum.put(first, bShopSum);
 				}else{
 					System.out.println("合計金額が10桁を超えました");
 					return;
 				}
-			
-				//itemSum
-				long sumsrc2 = itemSum.get(second);
+				//commoditySum
+				long sumsrc2 = commoditySum.get(second);
 				long bItemSum = sumsrc2 + thirdNum;
 				int valLen2 = String.valueOf( bItemSum ).length();
 				if(valLen2 < 11){
-					itemSum.put(second,bItemSum);
+					commoditySum.put(second,bItemSum);
 				}else{
 					System.out.println("合計金額が10桁を超えました");
 					return;
 				}
-				//四行目があればエラー表示し、プログラムを終了する。
-				String fourth = br.readLine();
-				if(fourth == null){
-				}else{
-					System.out.println(renbanList.get(i)+"のフォーマットが不正です");
-					return;
-				}
+				
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
+				return;
 			}finally{
 				try{
 					if(br != null){
@@ -276,7 +261,7 @@ public class Process {
 		
 		//支店別集計ファイル　出力	
         String outBrPath = cmdLine+File.separator+"branch.out";
-        boolean kekkaBr = outBC(outBrPath, shop, shopSum);
+        boolean kekkaBr = outBC(outBrPath, branch, branchSum);
         if(kekkaBr == false){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
@@ -284,7 +269,7 @@ public class Process {
         
       //商品別集計ファイル　出力	
         String outComPath = cmdLine+File.separator+"commodity.out";
-        boolean kekkaCom = outBC(outComPath, item, itemSum);
+        boolean kekkaCom = outBC(outComPath, commodity, commoditySum);
         if(kekkaCom == false){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
