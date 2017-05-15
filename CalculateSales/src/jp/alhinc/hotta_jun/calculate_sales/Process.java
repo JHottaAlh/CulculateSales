@@ -29,18 +29,11 @@ public class Process {
 				while((s = br.readLine()) != null){
 					String[] arr;
 					arr = s.split(",");	
-					if(arr[0].matches(condit)){
-						if(arr.length == 2){							//商品名がカンマ、改行を含まない
-							putMap.put(arr[0], arr[1]);
-							putSum.put(arr[0],0L);
-						}else{
-							System.out.println(junle+"定義ファイルのフォーマットが不正です");
-							br.close();
-							return false;
-						}
+					if(arr[0].matches(condit) && arr.length == 2){
+						putMap.put(arr[0], arr[1]);
+						putSum.put(arr[0],0L);
 					}else{
 						System.out.println(junle+"定義ファイルのフォーマットが不正です");
-						br.close();
 						return false;
 					}
 				}		
