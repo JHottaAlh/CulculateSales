@@ -1,17 +1,11 @@
 package jp.alhinc.hotta_jun.calculate_sales;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class Process {		
 	public static void main(String[] args){
@@ -270,73 +264,22 @@ public class Process {
 			}				
 		}	
 		
-		//店舗売上金額の合計のマップをリストに格納
-        List<Map.Entry<String,Long>> shopEntries = 
-              new ArrayList<Map.Entry<String,Long>>(shopSum.entrySet());
-        Collections.sort(shopEntries, new Comparator<Map.Entry<String,Long>>() { 
-            @Override
-            public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
-                return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
-            }
-        });
-        
-      //商品売上金額の合計のマップをリストに格納
-        List<Map.Entry<String,Long>> itemEntries = 
-              new ArrayList<Map.Entry<String,Long>>(itemSum.entrySet());
-        Collections.sort(itemEntries, new Comparator<Map.Entry<String,Long>>() { 
-            @Override
-            public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
-                return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
-            }
-        });
+		
 		
 		//支店別集計ファイル　出力	
-		BufferedWriter outBra = null;
-		try{
-			File file = new File(cmdLine+File.separator+"branch.out");
-			FileWriter fw = new FileWriter(file);
-			outBra = new BufferedWriter(fw);
-			for(Entry<String,Long> s : shopEntries){
-				outBra.write(s.getKey()+","+shop.get(s.getKey())+","+s.getValue()+crlf);
-			}
-		}catch(IOException e){
-			return;
-		}finally{
-			try{
-				if(outBra != null){
-					outBra.close();
-				}else{
-					System.out.println("予期せぬエラーが発生しました");
-					return;
-				}
-			}catch(IOException e){
-				System.out.println("予期せぬエラーが発生しました");
-				return;
-			}
-		}	
-		//商品別集計ファイル　出力
-		BufferedWriter outCom = null;
-		try{
-			File file = new File(cmdLine+File.separator+"commodity.out");
-			FileWriter fw = new FileWriter(file);
-			outCom = new BufferedWriter(fw);
-			for(Entry<String,Long> s : itemEntries){
-				outCom.write(s.getKey()+","+item.get(s.getKey())+","+s.getValue()+crlf);		
-			}
-		}catch(IOException e){
-			return;
-		}finally{
-			try{
-				if(outCom != null){
-					outCom.close();
-				}else{
-					System.out.println("予期せぬエラーが発生しました");
-					return;
-				}
-			}catch(IOException e){
-				System.out.println("予期せぬエラーが発生しました");
-				return;
-			}
-		}
+        String outBrPath = cmdLine+File.separator+"branch.out";
+        boolean kekkaBr = MethodList.outBC(outBrPath, shop, shopSum);
+        if(kekkaBr == false){
+        	System.out.println("予期せぬエラーが発生しました");
+        	return;
+        }
+        
+      //商品別集計ファイル　出力	
+        String outComPath = cmdLine+File.separator+"commodity.out";
+        boolean kekkaCom = MethodList.outBC(outComPath, item, itemSum);
+        if(kekkaCom == false){
+        	System.out.println("予期せぬエラーが発生しました");
+        	return;
+        }
 	}
 }
