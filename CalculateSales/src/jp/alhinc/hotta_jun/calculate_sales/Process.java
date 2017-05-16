@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class Process {	
-	
-	
 	//入力ファイルを読み込み、マップに格納するためのメソッド
 	//条件式(支店or商品, ファイルパス, 条件1 名前Map, 合計Map)
 	public static boolean fileInput(String junle, String filePath, String condit, HashMap<String, String> putMap, HashMap<String, Long> putSum){
@@ -54,8 +52,6 @@ public class Process {
 		}
 		return true;
 	}
-	
-	
 	//出力ファイルを作成するためのメソッド
 	/*
 	HashMap codeはコード、名前
@@ -71,8 +67,7 @@ public class Process {
         	public int compare(Entry<String,Long> entry1, Entry<String,Long> entry2) {
         		return ((Long)entry2.getValue()).compareTo((Long)entry1.getValue());
         	}
-        });
-        
+        });  
         BufferedWriter br = null;
         try{
         	File file = new File(filePath);
@@ -99,14 +94,11 @@ public class Process {
 	
 	//--------------------------------メインメソッド--------------------------------//
 	public static void main(String[] args){
-		
-		
 		//コマンドライン引数が存在するかのチェック
 		if(args.length != 1){
 			System.out.println("予期せぬエラーが発生しました");
 			return;
-		}
-		
+		}	
 		//コマンドライン引数を変数に代入		
 		String cmdLine = args[0];
 		
@@ -124,16 +116,12 @@ public class Process {
 				
 		//支店定義ファイルを読み込む
 		String brPath = cmdLine + File.separator + "branch.lst";
-		if(!fileInput("支店", brPath, "[0-9]{3}", branch, branchSum)){
-			System.out.println("予期せぬエラーが発生しました");
+		if(!fileInput("支店", brPath, "[0-9]{3}", branch, branchSum)){		
 			return;
 		}
-		
-		
 		//商品定義ファイルを読み込む
 		String comPath = cmdLine + File.separator + "commodity.lst"; 
 		if(!fileInput("商品", comPath, "[0-9a-zA-Z]{8}", commodity, commoditySum)){
-			System.out.println("予期せぬエラーが発生しました");
 			return;
 		}
 		
@@ -171,8 +159,7 @@ public class Process {
 				serialList.add(serialNumber);
 				listSize++;	
 			}
-		}
-	
+		}	
 		//集計
 		int renNum = serialList.size();			
 		for(int i = 0; i < renNum; i++){
@@ -227,8 +214,7 @@ public class Process {
 				if(valLen1 >= 11){
 					System.out.println("合計金額が10桁を超えました");
 					return;
-				}
-				
+				}			
 				//commoditySum
 				long sumsrc2 = commoditySum.get(second);
 				long commodityAdd = sumsrc2 + thirdNum;
@@ -236,12 +222,10 @@ public class Process {
 				if(valLen2 >= 11){
 					System.out.println("合計金額が10桁を超えました");
 					return;
-				}
-				
+				}				
 				branchSum.put(first, branchAdd);
 				commoditySum.put(second, commodityAdd);
-				
-				
+	
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
 				return;
@@ -257,14 +241,12 @@ public class Process {
 			}				
 		}	
 		
-
 		//支店別集計ファイル　出力	
         String outBrPath = cmdLine + File.separator + "branch.out";
         if(!fileOutput(outBrPath, branch, branchSum)){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
-        }
-        
+        }      
       //商品別集計ファイル　出力	
         String outComPath = cmdLine + File.separator + "commodity.out";
         if(!fileOutput(outComPath, commodity, commoditySum)){
