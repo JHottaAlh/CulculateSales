@@ -18,7 +18,7 @@ public class Process {
 	
 	//入力ファイルを読み込み、マップに格納するためのメソッド
 	//条件式(支店or商品, ファイルパス, 条件1 名前Map, 合計Map)
-	public static boolean inSI(String junle, String filePath, String condit, HashMap<String, String> putMap, HashMap<String, Long> putSum){
+	public static boolean inBC(String junle, String filePath, String condit, HashMap<String, String> putMap, HashMap<String, Long> putSum){
 		File file = new File(filePath);
 		BufferedReader br = null;
 		try{
@@ -126,7 +126,7 @@ public class Process {
 				
 		//支店定義ファイルを読み込む
 		String brPath = cmdLine+File.separator+"branch.lst";
-		boolean inBrResult = inSI("支店", brPath, "[0-9]{3}", branch, branchSum);
+		boolean inBrResult = inBC("支店", brPath, "[0-9]{3}", branch, branchSum);
 		if(inBrResult == false){
 			return;
 		}
@@ -134,48 +134,46 @@ public class Process {
 		
 		//商品定義ファイルを読み込む
 		String comPath = cmdLine+File.separator+"commodity.lst"; 
-		boolean inComResult = inSI("商品", comPath, "[0-9a-zA-Z]{8}", commodity, commoditySum);
+		boolean inComResult = inBC("商品", comPath, "[0-9a-zA-Z]{8}", commodity, commoditySum);
 		if(inComResult == false){
 			return;
 		}
 		
 		//売り上げファイルの読み込み
-		
 		//--------------------ファイルのみ、0～9の八桁で拡張子が.rcdのものだけfileListに加える---------------------//
 		File dir = new File(cmdLine);	
 		File[] files = dir.listFiles();
 		for(int i = 0; i < files.length; i++){	
-			if(files[i].isFile()){
-				String fileName = files[i].getName();
-				if(fileName.matches("[0-9]{8}.rcd")){
-					fileList.add(fileName);
-				}
+			if(files[i].isFile() && files[i].getName().matches("[0-9]{8}.rcd")){
+				fileList.add(files[i].getName());
 			}
 		}
 		//-------------------fileListを.で区切ってファイル名を数値変換しfileSortリストに加える---------------------//
 		int rcdNum = fileList.size();
-		for(int i = 0; i < rcdNum; i++){
-			String[] arr;
-			arr = fileList.get(i).split("\\.");
-			int conversion = Integer.parseInt(arr[0]); 
-			fileSort.add(conversion);
-		}
-		Collections.sort(fileSort);	
+		if(rcdNum != 0){								///ファイルがひとつ以上存在する場合のみソート以降の処理をする
+			for(int i = 0; i < rcdNum; i++){
+				String[] arr;
+				arr = fileList.get(i).split("\\.");
+				int conversion = Integer.parseInt(arr[0]); 
+				fileSort.add(conversion);
+			}
+			Collections.sort(fileSort);	
 		//--------------------------------連番になっている場合のみプログラムを通す---------------------------------//
-		int fileSortNum = fileSort.size();
-		int j = fileSort.get(0);
-		for(int i = 0; i < fileSortNum; i++){
-			int num = fileSort.get(i);
-			String rcdRen = String.format("%08d",num);
-			String serial = String.format("%08d",j);
-			File serialNumber = new File(cmdLine+File.separator+rcdRen+".rcd");
-			if(rcdRen.equals(serial)){
-				serialList.add(serialNumber);
-				j++;		
-			}else{
-				System.out.println("売上ファイル名が連番になっていません");
-				return;
-			}	
+			int fileSortNum = fileSort.size();	
+			int j = fileSort.get(0);
+			for(int i = 0; i < fileSortNum; i++){
+				int num = fileSort.get(i);
+				String rcdRen = String.format("%08d",num);
+				String serial = String.format("%08d",j);
+				File serialNumber = new File(cmdLine+File.separator+rcdRen+".rcd");
+				if(rcdRen.equals(serial)){
+					serialList.add(serialNumber);
+					j++;		
+				}else{
+					System.out.println("売上ファイル名が連番になっていません");
+					return;
+				}	
+			}
 		}
 	
 		//集計
