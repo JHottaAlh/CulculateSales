@@ -18,7 +18,7 @@ public class Process {
 	
 	//入力ファイルを読み込み、マップに格納するためのメソッド
 	//条件式(支店or商品, ファイルパス, 条件1 名前Map, 合計Map)
-	public static boolean inBC(String junle, String filePath, String condit, HashMap<String, String> putMap, HashMap<String, Long> putSum){
+	public static boolean fileInput(String junle, String filePath, String condit, HashMap<String, String> putMap, HashMap<String, Long> putSum){
 		File file = new File(filePath);
 		BufferedReader br = null;
 		try{
@@ -31,7 +31,7 @@ public class Process {
 					arr = s.split(",");	
 					if(arr[0].matches(condit) && arr.length == 2){
 						putMap.put(arr[0], arr[1]);
-						putSum.put(arr[0],0L);
+						putSum.put(arr[0], 0L);
 					}else{
 						System.out.println(junle+"定義ファイルのフォーマットが不正です");
 						return false;
@@ -63,7 +63,7 @@ public class Process {
 	HashMap codeはコード、名前
 	HashMap sumはコード、合計金額
 	*/
-	static boolean outBC(String filePath, HashMap<String,String> code, HashMap<String,Long> sum){
+	static boolean fileOutput(String filePath, HashMap<String,String> code, HashMap<String,Long> sum){
 		//改行のための変数
 		String crlf = System.getProperty("line.separator");
 		//売上金額の合計のマップをリストに格納
@@ -126,7 +126,7 @@ public class Process {
 				
 		//支店定義ファイルを読み込む
 		String brPath = cmdLine+File.separator+"branch.lst";
-		boolean inBrResult = inBC("支店", brPath, "[0-9]{3}", branch, branchSum);
+		boolean inBrResult = fileInput("支店", brPath, "[0-9]{3}", branch, branchSum);
 		if(inBrResult == false){
 			return;
 		}
@@ -134,7 +134,7 @@ public class Process {
 		
 		//商品定義ファイルを読み込む
 		String comPath = cmdLine+File.separator+"commodity.lst"; 
-		boolean inComResult = inBC("商品", comPath, "[0-9a-zA-Z]{8}", commodity, commoditySum);
+		boolean inComResult = fileInput("商品", comPath, "[0-9a-zA-Z]{8}", commodity, commoditySum);
 		if(inComResult == false){
 			return;
 		}
@@ -165,8 +165,8 @@ public class Process {
 				int num = fileSort.get(i);
 				String rcdRen = String.format("%08d",num);
 				String serial = String.format("%08d",j);
-				File serialNumber = new File(cmdLine+File.separator+rcdRen+".rcd");
 				if(rcdRen.equals(serial)){
+					File serialNumber = new File(cmdLine+File.separator+rcdRen+".rcd");
 					serialList.add(serialNumber);
 					j++;		
 				}else{
@@ -225,24 +225,25 @@ public class Process {
 				Long thirdNum = new Long(third);						
 				//branchSum
 				long sumsrc1 = branchSum.get(first);
-				long bShopSum = sumsrc1 + thirdNum;
-				int valLen1 = String.valueOf( bShopSum ).length();
-				if(valLen1 < 11){
-					branchSum.put(first, bShopSum);
-				}else{
+				long branchAdd = sumsrc1 + thirdNum;
+				int valLen1 = String.valueOf( branchAdd ).length();
+				if(valLen1 >= 11){
 					System.out.println("合計金額が10桁を超えました");
 					return;
 				}
+				
 				//commoditySum
 				long sumsrc2 = commoditySum.get(second);
-				long bItemSum = sumsrc2 + thirdNum;
-				int valLen2 = String.valueOf( bItemSum ).length();
-				if(valLen2 < 11){
-					commoditySum.put(second,bItemSum);
-				}else{
+				long commodityAdd = sumsrc2 + thirdNum;
+				int valLen2 = String.valueOf( commodityAdd ).length();
+				if(valLen2 >= 11){
 					System.out.println("合計金額が10桁を超えました");
 					return;
 				}
+				
+				branchSum.put(first, branchAdd);
+				commoditySum.put(second, commodityAdd);
+				
 				
 			}catch(IOException e){
 				System.out.println("予期せぬエラーが発生しました");
@@ -259,20 +260,17 @@ public class Process {
 			}				
 		}	
 		
-		
-		
+
 		//支店別集計ファイル　出力	
         String outBrPath = cmdLine+File.separator+"branch.out";
-        boolean resultBr = outBC(outBrPath, branch, branchSum);
-        if(resultBr == false){
+        if(!fileOutput(outBrPath, branch, branchSum)){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
         }
         
       //商品別集計ファイル　出力	
         String outComPath = cmdLine+File.separator+"commodity.out";
-        boolean resultCom = outBC(outComPath, commodity, commoditySum);
-        if(resultCom == false){
+        if(!fileOutput(outComPath, commodity, commoditySum)){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
         }
