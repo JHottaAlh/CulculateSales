@@ -22,25 +22,23 @@ public class Process {
 		File file = new File(filePath);
 		BufferedReader br = null;
 		try{
-			if(file.exists() == true){
-				FileReader fl = new FileReader(file);
-				br = new BufferedReader(fl);
-				String s;	
-				while((s = br.readLine()) != null){
-					String[] arr;
-					arr = s.split(",");	
-					if(arr[0].matches(condit) && arr.length == 2){
-						putMap.put(arr[0], arr[1]);
-						putSum.put(arr[0], 0L);
-					}else{
-						System.out.println(junle+"定義ファイルのフォーマットが不正です");
-						return false;
-					}
-				}		
-			}else{
+			if(!file.exists()){
 				System.out.println(junle+"定義ファイルが存在しません");
 				return false;
 			}
+			FileReader fl = new FileReader(file);
+			br = new BufferedReader(fl);
+			String s;	
+			while((s = br.readLine()) != null){
+				String[] arr;
+				arr = s.split(",");	
+				if(arr.length != 2 || !arr[0].matches(condit)){
+					System.out.println(junle+"定義ファイルのフォーマットが不正です");
+					return false;
+				}
+				putMap.put(arr[0], arr[1]);
+				putSum.put(arr[0], 0L);
+			}		
 		}catch(IOException e){
 			System.out.println("予期せぬエラーが発生しました");
 			return false;
@@ -81,7 +79,7 @@ public class Process {
         	FileWriter fw = new FileWriter(file);
         	br = new BufferedWriter(fw);
         	for(Entry<String,Long> s : Entries){
-        		br.write(s.getKey()+","+code.get(s.getKey())+","+s.getValue()+crlf);
+        		br.write(s.getKey() + "," + code.get(s.getKey()) + "," + s.getValue() + crlf);
         	}
         }catch(IOException e){
         	return false;
@@ -125,17 +123,17 @@ public class Process {
 		HashMap<String, Long> commoditySum = new HashMap<String,Long>();		//商品コード,　合計金額
 				
 		//支店定義ファイルを読み込む
-		String brPath = cmdLine+File.separator+"branch.lst";
-		boolean inBrResult = fileInput("支店", brPath, "[0-9]{3}", branch, branchSum);
-		if(inBrResult == false){
+		String brPath = cmdLine + File.separator + "branch.lst";
+		if(!fileInput("支店", brPath, "[0-9]{3}", branch, branchSum)){
+			System.out.println("予期せぬエラーが発生しました");
 			return;
 		}
 		
 		
 		//商品定義ファイルを読み込む
-		String comPath = cmdLine+File.separator+"commodity.lst"; 
-		boolean inComResult = fileInput("商品", comPath, "[0-9a-zA-Z]{8}", commodity, commoditySum);
-		if(inComResult == false){
+		String comPath = cmdLine + File.separator + "commodity.lst"; 
+		if(!fileInput("商品", comPath, "[0-9a-zA-Z]{8}", commodity, commoditySum)){
+			System.out.println("予期せぬエラーが発生しました");
 			return;
 		}
 		
@@ -165,14 +163,13 @@ public class Process {
 				int num = fileSort.get(i);
 				String rcdRen = String.format("%08d",num);
 				String serial = String.format("%08d",j);
-				if(rcdRen.equals(serial)){
-					File serialNumber = new File(cmdLine+File.separator+rcdRen+".rcd");
-					serialList.add(serialNumber);
-					j++;		
-				}else{
+				if(!rcdRen.equals(serial)){
 					System.out.println("売上ファイル名が連番になっていません");
-					return;
-				}	
+					return;		
+				}
+				File serialNumber = new File(cmdLine + File.separator + rcdRen + ".rcd");
+				serialList.add(serialNumber);
+				j++;	
 			}
 		}
 	
@@ -187,37 +184,37 @@ public class Process {
 				//一行目(支店コード)を読み込む
 				String first = br.readLine();
 				if(first == null){
-					System.out.println(serialList.get(i).getName()+"のフォーマットが不正です");
+					System.out.println(serialList.get(i).getName() + "のフォーマットが不正です");
 					return;
 				}
 				//二行目(商品コード)を読み込む
 				String second = br.readLine();
 				if(second == null){
-					System.out.println(serialList.get(i).getName()+"のフォーマットが不正です");
+					System.out.println(serialList.get(i).getName() + "のフォーマットが不正です");
 					return;
 				}
 				//三行目(売上金額)を読み込む
 				String third = br.readLine();
 				if(third == null){
-					System.out.println(serialList.get(i).getName()+"のフォーマットが不正です");
+					System.out.println(serialList.get(i).getName() + "のフォーマットが不正です");
 					return;
 				}
 				//四行目があればエラー表示し、プログラムを終了する。
 				String fourth = br.readLine();
 				if(fourth != null){
-					System.out.println(serialList.get(i).getName()+"のフォーマットが不正です");
+					System.out.println(serialList.get(i).getName() + "のフォーマットが不正です");
 					return;
 				}
 				//コードがマップに存在しなかった場合の処理
-				if(branch.containsKey(first) == false){		//一行目が支店定義ファイルで宣言されたコードか
-					System.out.println(serialList.get(i).getName()+"の支店コードが不正です");
+				if(!branch.containsKey(first)){		//一行目が支店定義ファイルで宣言されたコードか
+					System.out.println(serialList.get(i).getName() + "の支店コードが不正です");
 					return;
 				}
-				if(commodity.containsKey(second) == false){
-					System.out.println(serialList.get(i).getName()+"の商品コードが不正です");
+				if(!commodity.containsKey(second)){
+					System.out.println(serialList.get(i).getName() + "の商品コードが不正です");
 					return;
 				}
-				if(third.matches("^[0-9]*$") == false){
+				if(!third.matches("^[0-9]*$")){
 					System.out.println("予期せぬエラーが発生しました");		
 					return;
 				}
@@ -226,7 +223,7 @@ public class Process {
 				//branchSum
 				long sumsrc1 = branchSum.get(first);
 				long branchAdd = sumsrc1 + thirdNum;
-				int valLen1 = String.valueOf( branchAdd ).length();
+				int valLen1 = String.valueOf(branchAdd).length();
 				if(valLen1 >= 11){
 					System.out.println("合計金額が10桁を超えました");
 					return;
@@ -235,7 +232,7 @@ public class Process {
 				//commoditySum
 				long sumsrc2 = commoditySum.get(second);
 				long commodityAdd = sumsrc2 + thirdNum;
-				int valLen2 = String.valueOf( commodityAdd ).length();
+				int valLen2 = String.valueOf(commodityAdd).length();
 				if(valLen2 >= 11){
 					System.out.println("合計金額が10桁を超えました");
 					return;
@@ -262,14 +259,14 @@ public class Process {
 		
 
 		//支店別集計ファイル　出力	
-        String outBrPath = cmdLine+File.separator+"branch.out";
+        String outBrPath = cmdLine + File.separator + "branch.out";
         if(!fileOutput(outBrPath, branch, branchSum)){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
         }
         
       //商品別集計ファイル　出力	
-        String outComPath = cmdLine+File.separator+"commodity.out";
+        String outComPath = cmdLine + File.separator + "commodity.out";
         if(!fileOutput(outComPath, commodity, commoditySum)){
         	System.out.println("予期せぬエラーが発生しました");
         	return;
