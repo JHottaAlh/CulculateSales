@@ -158,18 +158,18 @@ public class Process {
 			Collections.sort(fileSort);	
 		//--------------------------------連番になっている場合のみプログラムを通す---------------------------------//
 			int fileSortNum = fileSort.size();	
-			int j = fileSort.get(0);
+			int listSize = fileSort.get(0);
 			for(int i = 0; i < fileSortNum; i++){
 				int num = fileSort.get(i);
 				String rcdRen = String.format("%08d",num);
-				String serial = String.format("%08d",j);
+				String serial = String.format("%08d",listSize);
 				if(!rcdRen.equals(serial)){
 					System.out.println("売上ファイル名が連番になっていません");
 					return;		
 				}
 				File serialNumber = new File(cmdLine + File.separator + rcdRen + ".rcd");
 				serialList.add(serialNumber);
-				j++;	
+				listSize++;	
 			}
 		}
 	
