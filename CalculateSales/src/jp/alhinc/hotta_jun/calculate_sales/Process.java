@@ -140,14 +140,19 @@ public class Process {
 		}
 		
 		//売り上げファイルの読み込み
-		File dir = new File(cmdLine);					//ファイル名をString型で取得、中でも.rcdのものだけリストに入れる
-		String[] files = dir.list();
-		for(int i = 0; i < files.length; i++){					
-			if(files[i].contains(".rcd")){
-				fileList.add(files[i]);
+		
+		//--------------------ファイルのみ、0～9の八桁で拡張子が.rcdのものだけfileListに加える---------------------//
+		File dir = new File(cmdLine);	
+		File[] files = dir.listFiles();
+		for(int i = 0; i < files.length; i++){	
+			if(files[i].isFile()){
+				String fileName = files[i].getName();
+				if(fileName.matches("[0-9]{8}.rcd")){
+					fileList.add(fileName);
+				}
 			}
 		}
-		//rcdListリストのファイル名を数値に変換して数値のものは新しいリスト拡張子つきで格納
+		//-------------------fileListを.で区切ってファイル名を数値変換しfileSortリストに加える---------------------//
 		int rcdNum = fileList.size();
 		for(int i = 0; i < rcdNum; i++){
 			String[] arr;
@@ -155,17 +160,16 @@ public class Process {
 			int conversion = Integer.parseInt(arr[0]); 
 			fileSort.add(conversion);
 		}
-		Collections.sort(fileSort);
+		Collections.sort(fileSort);	
+		//--------------------------------連番になっている場合のみプログラムを通す---------------------------------//
 		int fileSortNum = fileSort.size();
-		
-		//連番になっている場合のみプログラムを通す
 		int j = fileSort.get(0);
 		for(int i = 0; i < fileSortNum; i++){
 			int num = fileSort.get(i);
 			String rcdRen = String.format("%08d",num);
 			String serial = String.format("%08d",j);
 			File serialNumber = new File(cmdLine+File.separator+rcdRen+".rcd");
-			if(rcdRen.equals(serial) && serialNumber.isFile()){
+			if(rcdRen.equals(serial)){
 				serialList.add(serialNumber);
 				j++;		
 			}else{
@@ -185,34 +189,34 @@ public class Process {
 				//一行目(支店コード)を読み込む
 				String first = br.readLine();
 				if(first == null){
-					System.out.println(serialList.get(i)+"のフォーマットが不正です");
+					System.out.println(serialList.get(i).getName()+"のフォーマットが不正です");
 					return;
 				}
 				//二行目(商品コード)を読み込む
 				String second = br.readLine();
 				if(second == null){
-					System.out.println(serialList.get(i)+"のフォーマットが不正です");
+					System.out.println(serialList.get(i).getName()+"のフォーマットが不正です");
 					return;
 				}
 				//三行目(売上金額)を読み込む
 				String third = br.readLine();
 				if(third == null){
-					System.out.println(serialList.get(i)+"のフォーマットが不正です");
+					System.out.println(serialList.get(i).getName()+"のフォーマットが不正です");
 					return;
 				}
 				//四行目があればエラー表示し、プログラムを終了する。
 				String fourth = br.readLine();
 				if(fourth != null){
-					System.out.println(serialList.get(i)+"のフォーマットが不正です");
+					System.out.println(serialList.get(i).getName()+"のフォーマットが不正です");
 					return;
 				}
 				//コードがマップに存在しなかった場合の処理
 				if(branch.containsKey(first) == false){		//一行目が支店定義ファイルで宣言されたコードか
-					System.out.println(serialList.get(i)+"の支店コードが不正です");
+					System.out.println(serialList.get(i).getName()+"の支店コードが不正です");
 					return;
 				}
 				if(commodity.containsKey(second) == false){
-					System.out.println(serialList.get(i)+"の商品コードが不正です");
+					System.out.println(serialList.get(i).getName()+"の商品コードが不正です");
 					return;
 				}
 				if(third.matches("^[0-9]*$") == false){
